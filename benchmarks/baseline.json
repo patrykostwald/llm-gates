@@ -1,9 +1,9 @@
 {
-  "accuracy": 0.932039,
-  "macro_f1": 0.918938,
-  "publish_precision": 0.821429,
-  "review_recall": 0.848485,
+  "accuracy": 0.893204,
+  "macro_f1": 0.863149,
+  "publish_precision": 0.911765,
+  "review_recall": 0.954545,
   "reject_recall": 1.0,
-  "max_unsafe_publishes": 10,
-  "max_clean_blocked": 4
+  "max_unsafe_publishes": 3,
+  "max_clean_blocked": 19
 }

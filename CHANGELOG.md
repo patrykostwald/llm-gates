@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `NearMissRule` and `find_near_misses`: a valid, in-force citation that is one swap of two
+  adjacent characters (`ACT-012` and `ACT-021`), or one edit in a sparsely numbered
+  registry, away from another norm in force goes to `review`. On by default in
+  `PublicationGate.default` (`near_miss=False` leaves it out). Trade-off in ADR 0002.
+- `NormRegistry` can be iterated.
+
 ### Changed
 
 - `pii`: the scanner now reads masked e-mail addresses (`jan [at] example dot com`,

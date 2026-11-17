@@ -18,7 +18,12 @@ from datetime import date
 from enum import Enum
 from typing import Any, Protocol
 
-from llm_gates.citations import NormRegistry, verify_citations
+from llm_gates.citations import (
+    DEFAULT_MAX_EDIT_NEIGHBOURS,
+    NormRegistry,
+    find_near_misses,
+    verify_citations,
+)
 from llm_gates.compare import AgreementLevel, compare_outputs
 from llm_gates.pii import find_pii
 from llm_gates.schema import Schema
@@ -103,10 +108,19 @@ class PublicationGate:
         self.rules.append(rule)
 
     @classmethod
-    def default(cls, schema: Schema, registry: NormRegistry) -> PublicationGate:
-        """The default policy: schema and citations reject; PII and model
-        disagreement send the output to a human."""
-        return cls([SchemaRule(schema), CitationRule(registry), PiiRule(), AgreementRule()])
+    def default(
+        cls, schema: Schema, registry: NormRegistry, *, near_miss: bool = True
+    ) -> PublicationGate:
+        """The default policy: schema and citations reject; near-miss citations,
+        PII and model disagreement send the output to a human.
+
+        Pass ``near_miss=False`` to leave out :class:`NearMissRule`, for example
+        when your registry numbers its norms so densely that the rule is noisy.
+        """
+        rules: list[Rule] = [SchemaRule(schema), CitationRule(registry)]
+        if near_miss:
+            rules.append(NearMissRule(registry))
+        return cls([*rules, PiiRule(), AgreementRule()])
 
     def evaluate(
         self,
@@ -163,6 +177,31 @@ class CitationRule:
     def check(self, context: GateContext) -> Sequence[Finding]:
         report = verify_citations(context.output, self.registry, context.as_of, field=self.field)
         return [Finding(self.name, Verdict.REJECT, str(p)) for p in report.problems]
+
+
+@dataclass(frozen=True, slots=True)
+class NearMissRule:
+    """Send output to review when a valid citation is one slip away from another valid id.
+
+    The id exists and is in force, so :class:`CitationRule` is satisfied, but it
+    may be a typo for its neighbour. See :func:`llm_gates.find_near_misses` for
+    the exact criterion and its trade-off.
+    """
+
+    registry: NormRegistry
+    field: str = "citations"
+    max_edit_neighbours: int = DEFAULT_MAX_EDIT_NEIGHBOURS
+    name: str = "near-miss"
+
+    def check(self, context: GateContext) -> Sequence[Finding]:
+        misses = find_near_misses(
+            context.output,
+            self.registry,
+            context.as_of,
+            field=self.field,
+            max_edit_neighbours=self.max_edit_neighbours,
+        )
+        return [Finding(self.name, Verdict.REVIEW, str(miss)) for miss in misses]
 
 
 @dataclass(frozen=True, slots=True)

@@ -76,7 +76,7 @@ Two runnable examples live in [`examples/`](examples): `legal_diagnosis.py` (a f
 | Piece | Module | What it does |
 | --- | --- | --- |
 | `Schema`, `Field` | `schema` | Validates structure: required fields, types, allowed values, bounds, lists, nested objects. Errors carry a path such as `$.citations[2]`. |
-| `NormRegistry`, `verify_citations` | `citations` | Every cited id must exist and be in force on `as_of` (inclusive window). Problems are `unknown`, `not_in_force` or `malformed`. Load from JSON or CSV. |
+| `NormRegistry`, `verify_citations`, `find_near_misses` | `citations` | Every cited id must exist and be in force on `as_of` (inclusive window). Problems are `unknown`, `not_in_force` or `malformed`. A valid id that is one swap of two characters (or, in a sparse registry, one edit) away from another id in force is a near miss. Load from JSON or CSV. |
 | `compare_outputs` | `compare` | Compares two independent outputs: same conclusion, Jaccard overlap of citations, confidence gap. Returns `agree`, `partial` or `disagree` with reasons. |
 | `find_pii` | `pii` | Finds e-mail (also `jan [at] example dot com`), phone, IBAN (mod-97, any spacing), PESEL (checksum, any spacing) and `ul.` street addresses. |
 | `PublicationGate`, `Rule` | `gate` | Runs rules, takes the most severe verdict. Add your own rule by implementing `name` and `check(context)`. |
@@ -86,6 +86,7 @@ Default policy of `PublicationGate.default(...)`:
 | Finding | Verdict |
 | --- | --- |
 | schema error, malformed, unknown or out-of-force citation | `reject` |
+| valid citation that looks like a slip for another valid id (near miss) | `review` |
 | possible personal data | `review` |
 | second opinion missing, partial or disagreeing | `review` |
 | nothing found | `publish` |
@@ -111,7 +112,7 @@ Claims are cheap, so the repository measures them. `benchmarks/` holds 206 synth
 
 | System | Accuracy | Publish precision | Unsafe publishes | Clean cases blocked |
 | --- | --- | --- | --- | --- |
-| `PublicationGate.default` | 93.2% | 82.1% | 10 of 156 | 4 of 50 |
+| `PublicationGate.default` | 89.3% | 91.2% | 3 of 156 | 19 of 50 |
 | Schema validation only | 35.9% | 27.5% | 132 of 156 | 0 of 50 |
 | Model agreement only | 32.0% | 30.3% | 115 of 156 | 0 of 50 |
 
@@ -119,8 +120,8 @@ Claims are cheap, so the repository measures them. `benchmarks/` holds 206 synth
 
 What the gate does not catch is listed there case by case:
 
-* 4 of 16 masked personal data samples are published: phone numbers written with dots, parentheses, spelled-out digits or the letter O for zero.
-* 6 of 6 id typos that land on another real norm in force are published.
+* 3 of 16 masked personal data samples are published: phone numbers written with dots, parentheses, spelled-out digits or the letter O for zero.
+* The near-miss rule holds back all 6 id typos that land on another real norm in force, and 15 clean answers with it, because their citation has a swap twin (ADR 0002).
 * 4 clean answers are sent to review because a nine-digit reference looks like a phone number.
 
 These numbers come from synthetic data written by the author, so read them as a regression guard and a comparison between approaches, not as a forecast for your traffic. CI fails if a score drops. Reproduce with `python benchmarks/run.py --check`.

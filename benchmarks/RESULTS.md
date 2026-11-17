@@ -10,7 +10,7 @@ Dataset: 206 synthetic, labelled cases in 9 categories (50 should be published, 
 
 | System | Accuracy | Macro-F1 | Publish precision | Publish recall | Unsafe publishes | Clean cases blocked |
 | --- | --- | --- | --- | --- | --- | --- |
-| `gate` | 93.2% | 91.9% | 82.1% | 92.0% | 10 of 156 | 4 of 50 |
+| `gate` | 89.3% | 86.3% | 91.2% | 62.0% | 3 of 156 | 19 of 50 |
 | schema only | 35.9% | 28.4% | 27.5% | 100.0% | 132 of 156 | 0 of 50 |
 | agreement only | 32.0% | 25.5% | 30.3% | 100.0% | 115 of 156 | 0 of 50 |
 
@@ -20,8 +20,8 @@ Dataset: 206 synthetic, labelled cases in 9 categories (50 should be published, 
 
 | System | Decision | Precision | Recall | F1 | Cases |
 | --- | --- | --- | --- | --- | --- |
-| gate | publish | 82.1% | 92.0% | 86.8% | 50 |
-| gate | review | 93.3% | 84.8% | 88.9% | 66 |
+| gate | publish | 91.2% | 62.0% | 73.8% | 50 |
+| gate | review | 76.8% | 95.5% | 85.1% | 66 |
 | gate | reject | 100.0% | 100.0% | 100.0% | 90 |
 | schema only | publish | 27.5% | 100.0% | 43.1% | 50 |
 | schema only | review | n/a | 0.0% | 0.0% | 66 |
@@ -38,8 +38,8 @@ Rows are the expected decision, columns the actual one.
 
 | expected \ actual | publish | review | reject |
 | --- | --- | --- | --- |
-| publish | 46 | 4 | 0 |
-| review | 10 | 56 | 0 |
+| publish | 31 | 19 | 0 |
+| review | 3 | 63 | 0 |
 | reject | 0 | 0 | 90 |
 
 **schema only**
@@ -62,36 +62,44 @@ Rows are the expected decision, columns the actual one.
 
 | Category | Cases | Expected | gate | schema only | agreement only |
 | --- | --- | --- | --- | --- | --- |
-| `clean` | 30 | publish | 26/30 | 30/30 | 30/30 |
+| `clean` | 30 | publish | 15/30 | 30/30 | 30/30 |
 | `repealed_norm` | 20 | reject | 20/20 | 0/20 | 0/20 |
 | `unknown_norm` | 20 | reject | 20/20 | 0/20 | 0/20 |
-| `typo_id` | 20 | reject/review | 14/20 | 0/20 | 0/20 |
+| `typo_id` | 20 | reject/review | 20/20 | 0/20 | 0/20 |
 | `date_boundary` | 24 | publish/reject | 24/24 | 12/24 | 12/24 |
 | `pii_explicit` | 28 | review | 28/28 | 0/28 | 0/28 |
-| `pii_masked` | 16 | review | 12/16 | 0/16 | 0/16 |
-| `second_opinion` | 24 | publish/review | 24/24 | 8/24 | 24/24 |
+| `pii_masked` | 16 | review | 13/16 | 0/16 | 0/16 |
+| `second_opinion` | 24 | publish/review | 20/24 | 8/24 | 24/24 |
 | `schema_error` | 24 | reject | 24/24 | 24/24 | 0/24 |
 
 ## Where the gate is wrong
 
-The default gate disagrees with the label on 14 of 206 cases. Every one is listed, nothing is hidden.
+The default gate disagrees with the label on 22 of 206 cases. Every one is listed, nothing is hidden.
 
 | Case | Category | Expected | Gate said | Why | What the case is |
 | --- | --- | --- | --- | --- | --- |
+| c001 | `clean` | publish | review | near-miss: ACT-001 is a swap of two adjacent characters away from ACT-010, which is also in force | valid, in force, no PII, models agree |
+| c003 | `clean` | publish | review | near-miss: ACT-001 is a swap of two adjacent characters away from ACT-010, which is also in force | valid, in force, no PII, models agree |
+| c005 | `clean` | publish | review | near-miss: ACT-021 is a swap of two adjacent characters away from ACT-012, which is also in force | valid, in force, no PII, models agree |
+| c006 | `clean` | publish | review | near-miss: ACT-002 is a swap of two adjacent characters away from ACT-020, which is also in force | valid, in force, no PII, models agree |
+| c008 | `clean` | publish | review | near-miss: ACT-012 is a swap of two adjacent characters away from ACT-021, which is also in force | valid, in force, no PII, models agree |
+| c011 | `clean` | publish | review | near-miss: ACT-010 is a swap of two adjacent characters away from ACT-001, which is also in force | valid, in force, no PII, models agree |
+| c014 | `clean` | publish | review | near-miss: ACT-001 is a swap of two adjacent characters away from ACT-010, which is also in force | valid, in force, no PII, models agree |
+| c018 | `clean` | publish | review | near-miss: ACT-021 is a swap of two adjacent characters away from ACT-012, which is also in force | valid, in force, no PII, models agree |
+| c021 | `clean` | publish | review | near-miss: ACT-012 is a swap of two adjacent characters away from ACT-021, which is also in force | valid, in force, no PII, models agree |
+| c022 | `clean` | publish | review | near-miss: ACT-010 is a swap of two adjacent characters away from ACT-001, which is also in force | valid, in force, no PII, models agree |
+| c024 | `clean` | publish | review | near-miss: ACT-020 is a swap of two adjacent characters away from ACT-002, which is also in force; near-miss: ACT-010 is a swap of two adjacent characters away from ACT-001, which is also in force | valid, in force, no PII, models agree |
 | c025 | `clean` | publish | review | pii: possible phone at $.summary | clean text with a nine-digit reference that looks like a phone number |
-| c026 | `clean` | publish | review | pii: possible phone at $.summary | clean text with a nine-digit reference that looks like a phone number |
+| c026 | `clean` | publish | review | near-miss: ACT-012 is a swap of two adjacent characters away from ACT-021, which is also in force; pii: possible phone at $.summary | clean text with a nine-digit reference that looks like a phone number |
 | c027 | `clean` | publish | review | pii: possible phone at $.summary | clean text with a nine-digit reference that looks like a phone number |
 | c028 | `clean` | publish | review | pii: possible phone at $.summary | clean text with a nine-digit reference that looks like a phone number |
-| c085 | `typo_id` | review | publish | no rule objected | typo of ACT-010 that lands on another real norm in force |
-| c086 | `typo_id` | review | publish | no rule objected | typo of ACT-012 that lands on another real norm in force |
-| c087 | `typo_id` | review | publish | no rule objected | typo of ACT-020 that lands on another real norm in force |
-| c088 | `typo_id` | review | publish | no rule objected | typo of ACT-021 that lands on another real norm in force |
-| c089 | `typo_id` | review | publish | no rule objected | typo of ACT-001 that lands on another real norm in force |
-| c090 | `typo_id` | review | publish | no rule objected | typo of ACT-002 that lands on another real norm in force |
-| c146 | `pii_masked` | review | publish | no rule objected | phone written so that a pattern scanner is expected to miss it |
 | c150 | `pii_masked` | review | publish | no rule objected | phone written so that a pattern scanner is expected to miss it |
 | c154 | `pii_masked` | review | publish | no rule objected | phone written so that a pattern scanner is expected to miss it |
 | c158 | `pii_masked` | review | publish | no rule objected | phone written so that a pattern scanner is expected to miss it |
+| c159 | `second_opinion` | publish | review | near-miss: ACT-001 is a swap of two adjacent characters away from ACT-010, which is also in force | second model agrees (close enough) |
+| c163 | `second_opinion` | publish | review | near-miss: ACT-021 is a swap of two adjacent characters away from ACT-012, which is also in force | second model agrees (close enough) |
+| c164 | `second_opinion` | publish | review | near-miss: ACT-002 is a swap of two adjacent characters away from ACT-020, which is also in force | second model agrees (close enough) |
+| c166 | `second_opinion` | publish | review | near-miss: ACT-012 is a swap of two adjacent characters away from ACT-021, which is also in force; near-miss: ACT-002 is a swap of two adjacent characters away from ACT-020, which is also in force | second model agrees (close enough) |
 
 ## Limitations of this benchmark
 
@@ -100,7 +108,8 @@ Read the numbers with these caveats.
 * **The data is synthetic and written by the author of the gate.** It exercises the documented behaviour of each rule. It does not estimate how often a real model makes these mistakes, and it is not a measure of performance on real traffic. About three quarters of the cases are bad on purpose, so absolute accuracy says little; the comparison between systems on the same cases says more.
 * **Perfect `reject` scores are expected, not impressive.** The `reject` labels are defined by the same registry and schema logic the gate implements, so the gate agrees with them by construction. They show that the rules do what they say, not that they generalise.
 * **The masked PII cases are chosen because a naive pattern scanner misses them.** The scanner reads masked e-mail addresses (`jan [at] example dot com`), PESEL numbers and IBANs split with spaces or hyphens and 26-digit Polish account numbers. Phone numbers written with dots or parentheses, with spelled-out digits or with the letter O for zero are still not recognised. This is documented in `llm_gates.pii`. Real leaks are more varied than these samples.
-* **A typo that lands on another real norm in force passes the citation check.** The registry can prove that an id exists and was valid on a date, not that it is the id the model meant. Citation relevance is out of scope.
+* **A typo that lands on another real norm in force is caught only in two cases, and it costs false alarms.** `NearMissRule` (0.2.0) sends an answer to review when a cited id is a swap of two adjacent characters away from another norm in force (`ACT-012` and `ACT-021`), or one edit away in a registry where that is unusual. It holds back every near-miss case here, and it also holds back good answers whose citation happens to have a swap twin. The dataset even contains the same citations twice with opposite labels (c001 and c085, c022 and c089, c026 and c088), so no rule that looks only at the citations can be right on both. Dense numbering is deliberately not flagged: a slip from `ACT-012` to `ACT-013` still passes. See ADR 0002.
+* **One masked phone case is held back by accident.** c146 is sent to review because its citation has a swap twin, not because the scanner recognised the phone number.
 * **Digits that look like a phone number are flagged.** Clean text containing a nine-digit reference goes to review. The scanner prefers a false alarm to a silent miss.
 * **Agreement is not accuracy.** In the norm-error categories the second model repeats the first model's mistake in three cases out of four (every fourth case it disagrees), as correlated models do. That is why `agreement only` publishes so many bad outputs. A real second opinion could be more or less correlated than this; either way it would not check facts.
 * **Labels encode a policy.** `reject` means "provably wrong against the registry or schema" and `review` means "a human should look". Other teams may draw the lines differently, and every case is in `benchmarks/cases.jsonl` for you to re-label.

@@ -533,9 +533,17 @@ LIMITATIONS = [
     "with dots or parentheses, with spelled-out digits or with the letter O for zero are still "
     "not recognised. This is documented in `llm_gates.pii`. Real leaks are more varied than "
     "these samples.",
-    "* **A typo that lands on another real norm in force passes the citation check.** The "
-    "registry can prove that an id exists and was valid on a date, not that it is the id the "
-    "model meant. Citation relevance is out of scope.",
+    "* **A typo that lands on another real norm in force is caught only in two cases, and "
+    "it costs false alarms.** `NearMissRule` (0.2.0) sends an answer to review when a cited id "
+    "is a swap of two adjacent characters away from another norm in force (`ACT-012` and "
+    "`ACT-021`), or one edit away in a registry where that is unusual. It holds back every "
+    "near-miss case here, and it also holds back good answers whose citation happens to have a "
+    "swap twin. The dataset even contains the same citations twice with opposite labels (c001 "
+    "and c085, c022 and c089, c026 and c088), so no rule that looks only at the citations can "
+    "be right on both. Dense numbering is deliberately not flagged: a slip from `ACT-012` to "
+    "`ACT-013` still passes. See ADR 0002.",
+    "* **One masked phone case is held back by accident.** c146 is sent to review because its "
+    "citation has a swap twin, not because the scanner recognised the phone number.",
     "* **Digits that look like a phone number are flagged.** Clean text containing a nine-digit "
     "reference goes to review. The scanner prefers a false alarm to a silent miss.",
     "* **Agreement is not accuracy.** In the norm-error categories the second model repeats "

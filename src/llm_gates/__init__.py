@@ -6,10 +6,13 @@ Models propose, code decides.
 from llm_gates.citations import (
     CitationProblem,
     CitationReport,
+    NearMiss,
+    NearMissKind,
     Norm,
     NormRegistry,
     ProblemKind,
     RegistryError,
+    find_near_misses,
     verify_citations,
 )
 from llm_gates.compare import Agreement, AgreementLevel, compare_outputs
@@ -19,6 +22,7 @@ from llm_gates.gate import (
     Decision,
     Finding,
     GateContext,
+    NearMissRule,
     PiiRule,
     PublicationGate,
     Rule,
@@ -41,6 +45,9 @@ __all__ = [
     "Field",
     "Finding",
     "GateContext",
+    "NearMiss",
+    "NearMissKind",
+    "NearMissRule",
     "Norm",
     "NormRegistry",
     "PiiKind",
@@ -57,6 +64,7 @@ __all__ = [
     "Verdict",
     "__version__",
     "compare_outputs",
+    "find_near_misses",
     "find_pii",
     "verify_citations",
 ]

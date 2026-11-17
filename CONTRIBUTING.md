@@ -38,7 +38,10 @@ pytest --cov
 python benchmarks/run.py --check    # what CI runs
 python benchmarks/run.py            # refresh RESULTS.md after a change that moves the scores
 python benchmarks/run.py --update-baseline   # only when a score genuinely improved
+python benchmarks/run.py --snapshot          # freeze the scores of a release (at tag time)
 ```
+
+`RESULTS.md` compares the current code with the last release through `benchmarks/release-<version>.json` (the default gate's decisions at that tag). A change that trades one score for another, such as a rule that catches more but also blocks more, may lower the floor in `baseline.json`; say so in an ADR and in the commit message.
 
 Never edit `cases.jsonl` by hand: change `benchmarks/generate.py` and rerun it. A new rule or detector should come with cases that show what it catches and what it still misses.
 

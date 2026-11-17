@@ -13,7 +13,10 @@ Loader = Callable[[str], ModuleType]
 
 # Categories in which the default gate is known to be wrong. Anything outside this
 # set failing would be a regression in a rule, not a documented limitation.
-KNOWN_GAP_CATEGORIES = {"clean", "typo_id", "pii_masked"}
+# clean: nine-digit references read as phone numbers, and answers whose citation has a swap
+# twin in the registry (the price of the near-miss rule). second_opinion: the same near-miss
+# false alarms. pii_masked: phone numbers written with dots, parentheses, words or letter O.
+KNOWN_GAP_CATEGORIES = {"clean", "second_opinion", "pii_masked"}
 
 
 @pytest.fixture(scope="module")
