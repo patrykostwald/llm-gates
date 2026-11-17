@@ -28,6 +28,8 @@ jobs:
         run: mypy
       - name: Pytest with coverage
         run: pytest --cov --cov-report=term-missing
+      - name: Benchmark (scores must not regress)
+        run: python benchmarks/run.py --check
       - name: Examples
         run: |
           python examples/legal_diagnosis.py

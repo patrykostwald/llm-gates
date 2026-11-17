@@ -30,6 +30,18 @@ pytest --cov
 * Code, comments and docstrings are in English.
 * Update `CHANGELOG.md` under "Unreleased".
 
+## Benchmark
+
+`benchmarks/` holds a synthetic, labelled dataset and a scorer (see `benchmarks/RESULTS.md`). CI fails if the default gate's scores drop or if `RESULTS.md` is stale.
+
+```
+python benchmarks/run.py --check    # what CI runs
+python benchmarks/run.py            # refresh RESULTS.md after a change that moves the scores
+python benchmarks/run.py --update-baseline   # only when a score genuinely improved
+```
+
+Never edit `cases.jsonl` by hand: change `benchmarks/generate.py` and rerun it. A new rule or detector should come with cases that show what it catches and what it still misses.
+
 ## Proposing a new rule or detector
 
 Open an issue first with: what it catches, an example input, and how it can be wrong. Rules that need a model or a network call do not fit this library; see [ADR 0001](docs/adr/0001-deterministic-gates-over-llm-as-judge.md).
