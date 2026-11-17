@@ -27,10 +27,10 @@ model output (JSON) -> schema -> citations -> PII scan -> second opinion -> publ
 ## Install
 
 ```
-pip install "llm-gates @ git+https://github.com/patrykostwald/llm-gates@v0.1.1"
+pip install "llm-gates @ git+https://github.com/patrykostwald/llm-gates@v0.2.0"
 ```
 
-Not on PyPI. Drop the `@v0.1.1` to install the latest `main`.
+Not on PyPI. Drop the `@v0.2.0` to install the latest `main`.
 
 From a checkout: `pip install -e ".[dev]"`.
 
@@ -118,21 +118,39 @@ Claims are cheap, so the repository measures them. `benchmarks/` holds 206 synth
 
 *Unsafe publishes* are outputs that should have been held back but were published. Precision, recall, confusion matrices and per-category scores are in [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md).
 
-What the gate does not catch is listed there case by case:
+### Before and after: 0.1.1 vs 0.2.0
 
-* 3 of 16 masked personal data samples are published: phone numbers written with dots, parentheses, spelled-out digits or the letter O for zero.
-* The near-miss rule holds back all 6 id typos that land on another real norm in force, and 15 clean answers with it, because their citation has a swap twin (ADR 0002).
-* 4 clean answers are sent to review because a nine-digit reference looks like a phone number.
+The 0.1.1 benchmark exposed two weaknesses. 0.2.0 addresses both. The same 206 cases, with the same labels, measure the effect:
 
-These numbers come from synthetic data written by the author, so read them as a regression guard and a comparison between approaches, not as a forecast for your traffic. CI fails if a score drops. Reproduce with `python benchmarks/run.py --check`.
+| Metric | 0.1.1 | 0.2.0 | Change |
+| --- | --- | --- | --- |
+| Accuracy | 87.4% | 89.3% | +1.9 pp |
+| Macro-F1 | 85.1% | 86.3% | +1.3 pp |
+| Publish precision | 67.6% | 91.2% | +23.5 pp |
+| Publish recall | 92.0% | 62.0% | -30.0 pp |
+| Unsafe publishes | 22 of 156 | 3 of 156 | -19 |
+| Clean cases blocked | 4 of 50 | 19 of 50 | +15 |
+
+* **Masked personal data**: 16 of 16 published in 0.1.1, 3 of 16 in 0.2.0. The scanner now reads `jan [at] example dot com`, `jan(at)example.com`, PESEL numbers and IBANs split with spaces or hyphens, lower-case IBANs and 26-digit Polish account numbers.
+* **Typos that land on another real norm** (`ACT-012` for `ACT-021`): 6 of 6 published in 0.1.1, 0 of 6 in 0.2.0. A new rule, `NearMissRule`, sends them to review.
+
+This is a trade, not a free win. Fifteen more good answers now go to review, because six of the 24 norms in the benchmark registry have a swap twin and the dataset contains the same citations under opposite labels (`c001` and `c085`, for one), which no rule that reads only the citations can tell apart. Accuracy and precision rose; recall of good answers fell from 92% to 62%. The reasoning and the alternatives are in [ADR 0002](docs/adr/0002-near-miss-citations-go-to-review.md). If your ids are numbered so that many have a swap twin, leave the rule out with `PublicationGate.default(schema, registry, near_miss=False)`.
+
+What still gets through, and why (every case is listed in `RESULTS.md`):
+
+* 3 of 16 masked personal data samples: phone numbers in `(501) 113 129` form, spelled out in words (`five zero two ...`) or with the letter O for zero. The scanner has no detector for them; adding one risks flagging ordinary numbers. A fourth phone sample (`500.100.100`) is held back only because its citation happens to have a swap twin.
+* Typos inside dense numbering (`ACT-012` written for `ACT-013`): not in the dataset and not caught, deliberately, since flagging them would flag every answer.
+* 4 clean answers that are sent to review because a nine-digit reference looks like a phone number.
+
+These numbers come from synthetic data written by the author, so read them as a regression guard and a comparison between approaches, not as a forecast for your traffic. CI fails if a score drops below the recorded floor. Reproduce with `python benchmarks/run.py --check`.
 
 ## Limitations
 
 Read these before relying on the library.
 
 * **Agreement is not accuracy.** Two models agreeing measures similarity of their answers. They can share training data, biases and the same mistake. A disagreement is a useful signal; an agreement is not proof.
-* **A clean PII scan is not proof of anonymity.** The scanner is a tripwire for a few common formats. It does not find names, free-text descriptions, other countries' identifiers or obfuscated data, and it produces false positives (for example nine-digit numbers read as phones).
-* **A citation check proves existence and validity, not relevance.** A norm can exist, be in force and still not support the claim. `llm-gates` does not read the cited text.
+* **A clean PII scan is not proof of anonymity.** The scanner is a tripwire for a few common formats. It does not find names, free-text descriptions, other countries' identifiers or most obfuscated data (it reads `jan [at] example dot com` and spaced PESEL and IBAN numbers, not spelled-out digits or dotted phone numbers), and it produces false positives (for example nine-digit numbers read as phones).
+* **A citation check proves existence and validity, not relevance.** A norm can exist, be in force and still not support the claim. `llm-gates` does not read the cited text. The near-miss rule catches some mistyped ids (swapped characters, slips in sparse numbering), not a slip from `ACT-012` to `ACT-013` in consecutive numbering.
 * **The registry is your source of truth.** If it is incomplete or outdated, the gate is too.
 * **Not legal advice.** The library is a building block, not a compliance product.
 
@@ -154,7 +172,7 @@ ruff check . && mypy && pytest --cov
 python benchmarks/run.py --check
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). The reasoning behind the design is in [ADR 0001](docs/adr/0001-deterministic-gates-over-llm-as-judge.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md). The reasoning behind the design is in [ADR 0001](docs/adr/0001-deterministic-gates-over-llm-as-judge.md) and [ADR 0002](docs/adr/0002-near-miss-citations-go-to-review.md).
 
 ## License
 

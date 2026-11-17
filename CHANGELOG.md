@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-17
+
 ### Added
 
 - `NearMissRule` and `find_near_misses`: a valid, in-force citation that is one swap of two
@@ -13,6 +15,10 @@ All notable changes to this project are documented here. The format follows
   registry, away from another norm in force goes to `review`. On by default in
   `PublicationGate.default` (`near_miss=False` leaves it out). Trade-off in ADR 0002.
 - `NormRegistry` can be iterated.
+- Benchmark: `benchmarks/release-0.1.1.json` freezes the 0.1.1 decisions, `RESULTS.md`
+  gets a "0.1.1 vs 0.2.0" section (totals, categories and every case whose decision
+  changed) and `run.py --snapshot` freezes a release. ADR 0002 records the near-miss
+  trade-off.
 
 ### Changed
 
@@ -22,6 +28,11 @@ All notable changes to this project are documented here. The format follows
   characters, and 26-digit Polish account numbers without the `PL` prefix. IBANs must now
   have the exact length for a known country. Limitations are listed in the module
   docstring.
+- Benchmark results, 0.1.1 to 0.2.0 on the same 206 cases: accuracy 87.4% to 89.3%,
+  unsafe publishes 22 to 3 of 156, masked personal data published 16 to 3 of 16, near-miss
+  typos published 6 to 0 of 6. The price: clean cases blocked 4 to 19 of 50 (publish recall
+  92% to 62%), because answers whose citation has a swap twin in the registry go to review
+  too. Switch the rule off with `PublicationGate.default(..., near_miss=False)`.
 
 ## [0.1.1] - 2026-11-17
 

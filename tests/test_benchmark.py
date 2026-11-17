@@ -212,3 +212,31 @@ def test_comparison_change_formatting(run: ModuleType) -> None:
     assert run._change("accuracy", 0.5, 0.55) == "+5.0 pp"
     assert run._change("unsafe_publishes", 10, 4) == "-6"
     assert run._change("clean_blocked", 4, 4) == "0"
+
+
+def test_readme_before_and_after_table_matches_results(run: ModuleType, results: Any) -> None:
+    readme = (run.HERE.parent / "README.md").read_text(encoding="utf-8")
+    previous = run.load_snapshot()
+    for metric, before, after, change in run.comparison_rows(results, previous, run.__version__):
+        assert f"| {metric} | {before} | {after} | {change} |" in readme, metric
+
+
+def test_what_still_gets_through_names_cases_the_gate_really_publishes(
+    run: ModuleType, results: Any
+) -> None:
+    published = {
+        case["id"]
+        for case, predicted in zip(results.cases, results.scores["gate"].predictions, strict=True)
+        if predicted == "publish" and case["expected"] != "publish"
+    }
+    assert published == {"c150", "c154", "c158"}
+    text = run.RESULTS_PATH.read_text(encoding="utf-8")
+    assert "## What still gets through, and why" in text
+    for case_id in sorted(published):
+        assert case_id in text
+    held = {
+        case["id"]: decision
+        for case, decision in zip(results.cases, results.gate_decisions, strict=True)
+        if case["id"] == "c146"
+    }["c146"]
+    assert [b.rule for b in held.blockers] == ["near-miss"]  # held back by accident, as documented

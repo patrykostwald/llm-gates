@@ -510,9 +510,29 @@ def render(results: Results, previous: Snapshot | None = None) -> str:
             for c, d, p in wrong
         ],
     )
-    out += ["", *LIMITATIONS]
+    out += ["", *STILL_GETS_THROUGH, *LIMITATIONS]
     return "\n".join(out) + "\n"
 
+
+STILL_GETS_THROUGH = [
+    "## What still gets through, and why",
+    "",
+    "Every case the gate gets wrong is in the table above. The three groups behind them:",
+    "",
+    "* **Masked phone numbers (c150, c154, c158).** The scanner has no detector for phone "
+    "numbers written as `(501) 113 129`, in words (`five zero two ...`) or with the letter O "
+    "for zero. Adding one risks flagging ordinary numbers, so it is left for later. A fourth "
+    "sample (c146, `500.100.100`) is held back only by accident, see below.",
+    "* **Slips inside dense numbering.** A model that writes `ACT-012` for `ACT-013` is not "
+    "caught and is not in the dataset. In consecutive numbering every id has neighbours, so "
+    "any rule that flags them would flag every answer.",
+    "* **Nine-digit references (c025 to c028).** Clean text with a nine-digit number is sent "
+    "to review because the phone detector prefers a false alarm to a silent miss.",
+    "",
+    "And the price of the near-miss rule: good answers whose citation has a swap twin in the "
+    "registry (`clean` and `second_opinion` cases above) now go to review too.",
+    "",
+]
 
 LIMITATIONS = [
     "## Limitations of this benchmark",

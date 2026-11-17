@@ -16,6 +16,72 @@ Dataset: 206 synthetic, labelled cases in 9 categories (50 should be published, 
 
 `gate` is `PublicationGate.default`. `schema only` publishes anything that passes schema validation. `agreement only` is an LLM-as-judge proxy: publish when two models agree, review otherwise (macro-F1 treats an undefined precision as 0).
 
+## Before and after: 0.1.1 vs 0.2.0
+
+The same 206 cases with the same labels, scored by the default gate of each release. The 0.1.1 column is a frozen snapshot of the tagged release (`benchmarks/release-0.1.1.json`); the 0.2.0 column is the code in this checkout.
+
+| Metric | 0.1.1 | 0.2.0 | Change |
+| --- | --- | --- | --- |
+| Accuracy | 87.4% | 89.3% | +1.9 pp |
+| Macro-F1 | 85.1% | 86.3% | +1.3 pp |
+| Publish precision | 67.6% | 91.2% | +23.5 pp |
+| Publish recall | 92.0% | 62.0% | -30.0 pp |
+| Unsafe publishes | 22 of 156 | 3 of 156 | -19 |
+| Clean cases blocked | 4 of 50 | 19 of 50 | +15 |
+
+Correct decisions by category:
+
+| Category | Cases | 0.1.1 | 0.2.0 |
+| --- | --- | --- | --- |
+| `clean` | 30 | 26/30 | 15/30 (worse) |
+| `repealed_norm` | 20 | 20/20 | 20/20 |
+| `unknown_norm` | 20 | 20/20 | 20/20 |
+| `typo_id` | 20 | 14/20 | 20/20 (better) |
+| `date_boundary` | 24 | 24/24 | 24/24 |
+| `pii_explicit` | 28 | 28/28 | 28/28 |
+| `pii_masked` | 16 | 0/16 | 13/16 (better) |
+| `second_opinion` | 24 | 24/24 | 20/24 (worse) |
+| `schema_error` | 24 | 24/24 | 24/24 |
+
+Cases whose decision changed since 0.1.1 (34):
+
+| Case | Category | Expected | 0.1.1 | 0.2.0 | Outcome |
+| --- | --- | --- | --- | --- | --- |
+| c001 | `clean` | publish | publish | review | now wrong |
+| c003 | `clean` | publish | publish | review | now wrong |
+| c005 | `clean` | publish | publish | review | now wrong |
+| c006 | `clean` | publish | publish | review | now wrong |
+| c008 | `clean` | publish | publish | review | now wrong |
+| c011 | `clean` | publish | publish | review | now wrong |
+| c014 | `clean` | publish | publish | review | now wrong |
+| c018 | `clean` | publish | publish | review | now wrong |
+| c021 | `clean` | publish | publish | review | now wrong |
+| c022 | `clean` | publish | publish | review | now wrong |
+| c024 | `clean` | publish | publish | review | now wrong |
+| c085 | `typo_id` | review | publish | review | fixed |
+| c086 | `typo_id` | review | publish | review | fixed |
+| c087 | `typo_id` | review | publish | review | fixed |
+| c088 | `typo_id` | review | publish | review | fixed |
+| c089 | `typo_id` | review | publish | review | fixed |
+| c090 | `typo_id` | review | publish | review | fixed |
+| c143 | `pii_masked` | review | publish | review | fixed |
+| c144 | `pii_masked` | review | publish | review | fixed |
+| c145 | `pii_masked` | review | publish | review | fixed |
+| c146 | `pii_masked` | review | publish | review | fixed |
+| c147 | `pii_masked` | review | publish | review | fixed |
+| c148 | `pii_masked` | review | publish | review | fixed |
+| c149 | `pii_masked` | review | publish | review | fixed |
+| c151 | `pii_masked` | review | publish | review | fixed |
+| c152 | `pii_masked` | review | publish | review | fixed |
+| c153 | `pii_masked` | review | publish | review | fixed |
+| c155 | `pii_masked` | review | publish | review | fixed |
+| c156 | `pii_masked` | review | publish | review | fixed |
+| c157 | `pii_masked` | review | publish | review | fixed |
+| c159 | `second_opinion` | publish | publish | review | now wrong |
+| c163 | `second_opinion` | publish | publish | review | now wrong |
+| c164 | `second_opinion` | publish | publish | review | now wrong |
+| c166 | `second_opinion` | publish | publish | review | now wrong |
+
 ## Precision and recall per decision
 
 | System | Decision | Precision | Recall | F1 | Cases |
@@ -100,6 +166,16 @@ The default gate disagrees with the label on 22 of 206 cases. Every one is liste
 | c163 | `second_opinion` | publish | review | near-miss: ACT-021 is a swap of two adjacent characters away from ACT-012, which is also in force | second model agrees (close enough) |
 | c164 | `second_opinion` | publish | review | near-miss: ACT-002 is a swap of two adjacent characters away from ACT-020, which is also in force | second model agrees (close enough) |
 | c166 | `second_opinion` | publish | review | near-miss: ACT-012 is a swap of two adjacent characters away from ACT-021, which is also in force; near-miss: ACT-002 is a swap of two adjacent characters away from ACT-020, which is also in force | second model agrees (close enough) |
+
+## What still gets through, and why
+
+Every case the gate gets wrong is in the table above. The three groups behind them:
+
+* **Masked phone numbers (c150, c154, c158).** The scanner has no detector for phone numbers written as `(501) 113 129`, in words (`five zero two ...`) or with the letter O for zero. Adding one risks flagging ordinary numbers, so it is left for later. A fourth sample (c146, `500.100.100`) is held back only by accident, see below.
+* **Slips inside dense numbering.** A model that writes `ACT-012` for `ACT-013` is not caught and is not in the dataset. In consecutive numbering every id has neighbours, so any rule that flags them would flag every answer.
+* **Nine-digit references (c025 to c028).** Clean text with a nine-digit number is sent to review because the phone detector prefers a false alarm to a silent miss.
+
+And the price of the near-miss rule: good answers whose citation has a swap twin in the registry (`clean` and `second_opinion` cases above) now go to review too.
 
 ## Limitations of this benchmark
 
