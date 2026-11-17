@@ -78,7 +78,7 @@ Two runnable examples live in [`examples/`](examples): `legal_diagnosis.py` (a f
 | `Schema`, `Field` | `schema` | Validates structure: required fields, types, allowed values, bounds, lists, nested objects. Errors carry a path such as `$.citations[2]`. |
 | `NormRegistry`, `verify_citations` | `citations` | Every cited id must exist and be in force on `as_of` (inclusive window). Problems are `unknown`, `not_in_force` or `malformed`. Load from JSON or CSV. |
 | `compare_outputs` | `compare` | Compares two independent outputs: same conclusion, Jaccard overlap of citations, confidence gap. Returns `agree`, `partial` or `disagree` with reasons. |
-| `find_pii` | `pii` | Finds e-mail, phone, IBAN (mod-97), PESEL (checksum) and `ul.` street addresses. |
+| `find_pii` | `pii` | Finds e-mail (also `jan [at] example dot com`), phone, IBAN (mod-97, any spacing), PESEL (checksum, any spacing) and `ul.` street addresses. |
 | `PublicationGate`, `Rule` | `gate` | Runs rules, takes the most severe verdict. Add your own rule by implementing `name` and `check(context)`. |
 
 Default policy of `PublicationGate.default(...)`:
@@ -111,7 +111,7 @@ Claims are cheap, so the repository measures them. `benchmarks/` holds 206 synth
 
 | System | Accuracy | Publish precision | Unsafe publishes | Clean cases blocked |
 | --- | --- | --- | --- | --- |
-| `PublicationGate.default` | 87.4% | 67.6% | 22 of 156 | 4 of 50 |
+| `PublicationGate.default` | 93.2% | 82.1% | 10 of 156 | 4 of 50 |
 | Schema validation only | 35.9% | 27.5% | 132 of 156 | 0 of 50 |
 | Model agreement only | 32.0% | 30.3% | 115 of 156 | 0 of 50 |
 
@@ -119,7 +119,7 @@ Claims are cheap, so the repository measures them. `benchmarks/` holds 206 synth
 
 What the gate does not catch is listed there case by case:
 
-* 16 of 16 masked personal data samples ("jan [at] example dot com", a PESEL with spaces) are published.
+* 4 of 16 masked personal data samples are published: phone numbers written with dots, parentheses, spelled-out digits or the letter O for zero.
 * 6 of 6 id typos that land on another real norm in force are published.
 * 4 clean answers are sent to review because a nine-digit reference looks like a phone number.
 

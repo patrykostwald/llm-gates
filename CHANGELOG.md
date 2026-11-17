@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- `pii`: the scanner now reads masked e-mail addresses (`jan [at] example dot com`,
+  `jan(at)example.com`, `jan AT example DOT com`), PESEL numbers split with spaces or a
+  hyphen between any digits, IBANs in any case with spaces or hyphens between any
+  characters, and 26-digit Polish account numbers without the `PL` prefix. IBANs must now
+  have the exact length for a known country. Limitations are listed in the module
+  docstring.
+
 ## [0.1.1] - 2026-11-17
 
 ### Added

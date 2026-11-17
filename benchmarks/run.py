@@ -527,10 +527,12 @@ LIMITATIONS = [
     "* **Perfect `reject` scores are expected, not impressive.** The `reject` labels are defined "
     "by the same registry and schema logic the gate implements, so the gate agrees with them by "
     "construction. They show that the rules do what they say, not that they generalise.",
-    "* **The masked PII cases are chosen because a pattern scanner misses them.** Obfuscated "
-    "e-mail addresses, PESEL numbers with unusual spacing, lower-case or oddly grouped IBANs "
-    "and spelled-out phone numbers are not recognised. This is documented in `llm_gates.pii`. "
-    "Real leaks are more varied than these samples.",
+    "* **The masked PII cases are chosen because a naive pattern scanner misses them.** The "
+    "scanner reads masked e-mail addresses (`jan [at] example dot com`), PESEL numbers and IBANs "
+    "split with spaces or hyphens and 26-digit Polish account numbers. Phone numbers written "
+    "with dots or parentheses, with spelled-out digits or with the letter O for zero are still "
+    "not recognised. This is documented in `llm_gates.pii`. Real leaks are more varied than "
+    "these samples.",
     "* **A typo that lands on another real norm in force passes the citation check.** The "
     "registry can prove that an id exists and was valid on a date, not that it is the id the "
     "model meant. Citation relevance is out of scope.",
