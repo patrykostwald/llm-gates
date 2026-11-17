@@ -12,6 +12,7 @@ Usage::
     python benchmarks/run.py                    # rewrite benchmarks/RESULTS.md
     python benchmarks/run.py --check            # fail if RESULTS.md is stale or scores regress
     python benchmarks/run.py --update-baseline  # record the current scores as the floor
+    python benchmarks/run.py --snapshot         # freeze the current scores as a release snapshot
 
 The scoring is plain arithmetic on a fixed dataset, so the output is identical on
 every run.
@@ -35,6 +36,7 @@ from llm_gates import (
     NormRegistry,
     PublicationGate,
     Schema,
+    __version__,
     compare_outputs,
 )
 
@@ -43,6 +45,8 @@ REGISTRY_PATH = HERE / "registry.json"
 CASES_PATH = HERE / "cases.jsonl"
 RESULTS_PATH = HERE / "RESULTS.md"
 BASELINE_PATH = HERE / "baseline.json"
+COMPARE_AGAINST = "0.1.1"
+"""The release whose frozen snapshot the results are compared with."""
 
 CLASSES = ("publish", "review", "reject")
 SYSTEMS = ("gate", "schema only", "agreement only")
@@ -215,6 +219,80 @@ def regressions(results: Results, floor: dict[str, float]) -> list[str]:
     return problems
 
 
+# --- release snapshots ---------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Snapshot:
+    """The gate's scores in a released version, frozen so later runs can compare with them."""
+
+    version: str
+    metrics: dict[str, float]
+    category_hits: dict[str, int]
+    predictions: dict[str, str]
+
+
+METRIC_KEYS = (
+    "accuracy",
+    "macro_f1",
+    "publish_precision",
+    "publish_recall",
+    "unsafe_publishes",
+    "clean_blocked",
+)
+
+
+def snapshot_path(version: str) -> Path:
+    return HERE / f"release-{version}.json"
+
+
+def snapshot_from(results: Results, version: str) -> Snapshot:
+    gate = results.scores["gate"]
+    metrics = {
+        "accuracy": round(gate.accuracy, 6),
+        "macro_f1": round(gate.macro_f1, 6),
+        "publish_precision": round(gate.publish_precision or 0.0, 6),
+        "publish_recall": round(gate.publish_recall or 0.0, 6),
+        "unsafe_publishes": gate.unsafe_publishes,
+        "clean_blocked": gate.clean_blocked,
+    }
+    hits = {
+        category: sum(
+            1
+            for case, predicted in zip(results.cases, gate.predictions, strict=True)
+            if case["category"] == category and predicted == case["expected"]
+        )
+        for category in _category_order(results.cases)
+    }
+    predictions = {
+        case["id"]: predicted
+        for case, predicted in zip(results.cases, gate.predictions, strict=True)
+    }
+    return Snapshot(version, metrics, hits, predictions)
+
+
+def write_snapshot(snapshot: Snapshot) -> Path:
+    data = {
+        "version": snapshot.version,
+        "metrics": snapshot.metrics,
+        "category_hits": snapshot.category_hits,
+        "predictions": snapshot.predictions,
+    }
+    path = snapshot_path(snapshot.version)
+    path.write_bytes((json.dumps(data, indent=2) + "\n").encode("utf-8"))
+    return path
+
+
+def load_snapshot(version: str = COMPARE_AGAINST) -> Snapshot:
+    data = json.loads(snapshot_path(version).read_text(encoding="utf-8"))
+    return Snapshot(
+        version=str(data["version"]),
+        metrics={str(k): float(v) for k, v in data["metrics"].items()},
+        category_hits={str(k): int(v) for k, v in data["category_hits"].items()},
+        predictions={str(k): str(v) for k, v in data["predictions"].items()},
+    )
+
+
 # --- rendering -------------------------------------------------------------------------------
 
 
@@ -241,7 +319,96 @@ def _why(decision: Decision) -> str:
     return "; ".join(f"{b.rule}: {b.reason}" for b in decision.blockers[:2])
 
 
-def render(results: Results) -> str:
+def _change(key: str, before: float, after: float) -> str:
+    if key in ("unsafe_publishes", "clean_blocked"):
+        return f"{int(after - before):+d}" if after != before else "0"
+    return f"{(after - before) * 100:+.1f} pp" if abs(after - before) > TOLERANCE else "0"
+
+
+def _metric_cell(key: str, value: float, results: Results) -> str:
+    totals = {label: results.scores["gate"].classes[label].support for label in CLASSES}
+    if key == "unsafe_publishes":
+        return f"{int(value)} of {totals['review'] + totals['reject']}"
+    if key == "clean_blocked":
+        return f"{int(value)} of {totals['publish']}"
+    return pct(value)
+
+
+METRIC_LABELS = {
+    "accuracy": "Accuracy",
+    "macro_f1": "Macro-F1",
+    "publish_precision": "Publish precision",
+    "publish_recall": "Publish recall",
+    "unsafe_publishes": "Unsafe publishes",
+    "clean_blocked": "Clean cases blocked",
+}
+
+
+def comparison_rows(results: Results, previous: Snapshot, version: str) -> list[list[str]]:
+    """Rows of the before and after table: metric, previous, current, change."""
+    now = snapshot_from(results, version).metrics
+    return [
+        [
+            METRIC_LABELS[key],
+            _metric_cell(key, previous.metrics[key], results),
+            _metric_cell(key, now[key], results),
+            _change(key, previous.metrics[key], now[key]),
+        ]
+        for key in METRIC_KEYS
+    ]
+
+
+def render_comparison(results: Results, previous: Snapshot, version: str) -> list[str]:
+    """The ``previous vs current`` section: totals, categories and every changed decision."""
+    gate = results.scores["gate"]
+    old, new = previous.version, version
+    out = [
+        f"## Before and after: {old} vs {new}",
+        "",
+        f"The same {len(results.cases)} cases with the same labels, scored by the default gate of "
+        f"each release. The {old} column is a frozen snapshot of the tagged release "
+        f"(`benchmarks/{snapshot_path(old).name}`); the {new} column is the code in this "
+        "checkout.",
+        "",
+    ]
+    out += _table(["Metric", old, new, "Change"], comparison_rows(results, previous, version))
+    now = snapshot_from(results, version)
+    rows = []
+    for category in _category_order(results.cases):
+        size = sum(1 for c in results.cases if c["category"] == category)
+        before, after = previous.category_hits[category], now.category_hits[category]
+        mark = "" if before == after else " (better)" if after > before else " (worse)"
+        rows.append([f"`{category}`", size, f"{before}/{size}", f"{after}/{size}{mark}"])
+    out += ["", "Correct decisions by category:", ""]
+    out += _table(["Category", "Cases", old, new], rows)
+    changed = []
+    for case, decision in zip(results.cases, gate.predictions, strict=True):
+        before_decision = previous.predictions[case["id"]]
+        if before_decision == decision:
+            continue
+        if decision == case["expected"]:
+            outcome = "fixed"
+        elif before_decision == case["expected"]:
+            outcome = "now wrong"
+        else:
+            outcome = "still wrong, different decision"
+        changed.append(
+            [
+                case["id"],
+                f"`{case['category']}`",
+                case["expected"],
+                before_decision,
+                decision,
+                outcome,
+            ]
+        )
+    out += ["", f"Cases whose decision changed since {old} ({len(changed)}):", ""]
+    out += _table(["Case", "Category", "Expected", old, new, "Outcome"], changed)
+    out.append("")
+    return out
+
+
+def render(results: Results, previous: Snapshot | None = None) -> str:
     cases, scores = results.cases, results.scores
     gate = scores["gate"]
     totals = {label: gate.classes[label].support for label in CLASSES}
@@ -292,9 +459,10 @@ def render(results: Results) -> str:
         "schema validation. `agreement only` is an LLM-as-judge proxy: publish when two models "
         "agree, review otherwise (macro-F1 treats an undefined precision as 0).",
         "",
-        "## Precision and recall per decision",
-        "",
     ]
+    if previous is not None and previous.version != __version__:
+        out += render_comparison(results, previous, __version__)
+    out += ["## Precision and recall per decision", ""]
     rows = []
     for s in scores.values():
         for label in CLASSES:
@@ -405,14 +573,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--update-baseline", action="store_true", help="record current scores as the floor"
     )
+    parser.add_argument(
+        "--snapshot",
+        action="store_true",
+        help="freeze the current gate scores as benchmarks/release-<version>.json",
+    )
     args = parser.parse_args(argv)
 
     results = evaluate()
+    if args.snapshot:
+        print(f"wrote {write_snapshot(snapshot_from(results, __version__)).name}")
+        return 0
     if args.update_baseline:
         text = json.dumps(baseline_from(results), indent=2) + "\n"
         BASELINE_PATH.write_bytes(text.encode("utf-8"))
         print(f"wrote {BASELINE_PATH.name}")
-    markdown = render(results)
+    markdown = render(results, load_snapshot())
     if args.check:
         problems = regressions(results, _read_baseline())
         current = RESULTS_PATH.read_text(encoding="utf-8") if RESULTS_PATH.exists() else ""
