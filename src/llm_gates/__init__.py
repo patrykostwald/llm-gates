@@ -28,7 +28,7 @@ from llm_gates.gate import (
 from llm_gates.pii import PiiKind, PiiMatch, find_pii
 from llm_gates.schema import Field, Schema, SchemaError, ValidationResult
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     "Agreement",

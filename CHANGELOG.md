@@ -6,6 +6,26 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-17
+
+### Added
+
+- `benchmarks/`: a deterministic, fully synthetic dataset of 206 labelled cases
+  (fictional norm registry with validity dates; nine categories from clean output
+  to masked personal data) and `benchmarks/generate.py` to rebuild it.
+- `benchmarks/run.py`: scores the default gate against two naive baselines
+  (schema validation only; agreement between two models only) and writes
+  `benchmarks/RESULTS.md` with precision, recall, confusion matrices, accuracy by
+  category and every case the gate gets wrong.
+- CI step and test that fail when the benchmark scores drop or `RESULTS.md` is stale.
+- README: CI and license badges, a Benchmark section, a pinned-tag install line and a
+  roadmap that matches the open GitHub issues.
+- CONTRIBUTING: how to work with the benchmark.
+
+### Changed
+
+- Package version is now 0.1.1. The library code is unchanged.
+
 ## [0.1.0] - 2026-11-17
 
 ### Added
