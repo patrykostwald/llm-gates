@@ -1,0 +1,226 @@
+[
+  {
+    "id": "ACT-001",
+    "title": "Duty of care Act (fictional)",
+    "effective_from": "2005-06-23"
+  },
+  {
+    "id": "ACT-002",
+    "title": "Data retention Act (fictional)",
+    "effective_from": "2005-12-13"
+  },
+  {
+    "id": "ACT-003",
+    "title": "Product labelling Act (fictional)",
+    "effective_from": "2006-06-04",
+    "effective_to": "2027-05-04"
+  },
+  {
+    "id": "ACT-004",
+    "title": "Safe storage Act (fictional)",
+    "effective_from": "2006-11-24"
+  },
+  {
+    "id": "ACT-005",
+    "title": "Fair notice Act (fictional)",
+    "effective_from": "2007-05-16"
+  },
+  {
+    "id": "ACT-006",
+    "title": "Contract withdrawal Act (fictional)",
+    "effective_from": "2007-11-05",
+    "effective_to": "2027-09-04"
+  },
+  {
+    "id": "ACT-007",
+    "title": "Tenant deposits Act (fictional)",
+    "effective_from": "2008-04-26"
+  },
+  {
+    "id": "ACT-008",
+    "title": "Public tenders Act (fictional)",
+    "effective_from": "2008-10-16"
+  },
+  {
+    "id": "ACT-009",
+    "title": "Noise limits Act (fictional)",
+    "effective_from": "2009-04-07",
+    "effective_to": "2028-01-05"
+  },
+  {
+    "id": "ACT-010",
+    "title": "Waste handling Act (fictional)",
+    "effective_from": "2009-09-27"
+  },
+  {
+    "id": "ACT-011",
+    "title": "Import licensing Act (fictional)",
+    "effective_from": "2010-03-19"
+  },
+  {
+    "id": "ACT-012",
+    "title": "Advertising claims Act (fictional)",
+    "effective_from": "2010-09-08",
+    "effective_to": "2028-05-07"
+  },
+  {
+    "id": "ACT-013",
+    "title": "Records access Act (fictional)",
+    "effective_from": "2011-02-28"
+  },
+  {
+    "id": "ACT-014",
+    "title": "Event permits Act (fictional)",
+    "effective_from": "2011-08-20"
+  },
+  {
+    "id": "ACT-015",
+    "title": "Boat registration Act (fictional)",
+    "effective_from": "2012-02-09",
+    "effective_to": "2028-09-07"
+  },
+  {
+    "id": "ACT-016",
+    "title": "Seed certification Act (fictional)",
+    "effective_from": "2012-07-31"
+  },
+  {
+    "id": "ACT-017",
+    "title": "Library lending Act (fictional)",
+    "effective_from": "2013-01-20"
+  },
+  {
+    "id": "ACT-018",
+    "title": "Market stalls Act (fictional)",
+    "effective_from": "2013-07-12",
+    "effective_to": "2029-01-08"
+  },
+  {
+    "id": "ACT-019",
+    "title": "Pet registration Act (fictional)",
+    "effective_from": "2014-01-01"
+  },
+  {
+    "id": "ACT-020",
+    "title": "Fire inspection Act (fictional)",
+    "effective_from": "2014-06-23"
+  },
+  {
+    "id": "ACT-021",
+    "title": "Parking zones Act (fictional)",
+    "effective_from": "2014-12-13",
+    "effective_to": "2029-05-11"
+  },
+  {
+    "id": "ACT-022",
+    "title": "Gift vouchers Act (fictional)",
+    "effective_from": "2015-06-04"
+  },
+  {
+    "id": "ACT-023",
+    "title": "Ferry timetables Act (fictional)",
+    "effective_from": "2015-11-24"
+  },
+  {
+    "id": "ACT-024",
+    "title": "Window displays Act (fictional)",
+    "effective_from": "2016-05-15",
+    "effective_to": "2029-09-11"
+  },
+  {
+    "id": "ACT-025",
+    "title": "Grain storage Act (fictional)",
+    "effective_from": "2012-06-11",
+    "effective_to": "2015-09-14"
+  },
+  {
+    "id": "ACT-026",
+    "title": "Kiosk licences Act (fictional)",
+    "effective_from": "2013-01-08",
+    "effective_to": "2016-05-28"
+  },
+  {
+    "id": "ACT-027",
+    "title": "Harbour dues Act (fictional)",
+    "effective_from": "2013-08-07",
+    "effective_to": "2017-02-09"
+  },
+  {
+    "id": "ACT-028",
+    "title": "Street trading Act (fictional)",
+    "effective_from": "2014-03-06",
+    "effective_to": "2017-10-24"
+  },
+  {
+    "id": "ACT-029",
+    "title": "Tool rentals Act (fictional)",
+    "effective_from": "2014-10-03",
+    "effective_to": "2018-07-08"
+  },
+  {
+    "id": "ACT-030",
+    "title": "Orchard labelling Act (fictional)",
+    "effective_from": "2015-05-02",
+    "effective_to": "2019-03-22"
+  },
+  {
+    "id": "ACT-031",
+    "title": "Bicycle lanes Act (fictional)",
+    "effective_from": "2015-11-29",
+    "effective_to": "2019-12-04"
+  },
+  {
+    "id": "ACT-032",
+    "title": "Festival safety Act (fictional)",
+    "effective_from": "2016-06-27",
+    "effective_to": "2020-08-17"
+  },
+  {
+    "id": "ACT-033",
+    "title": "Bridge tolls Act (fictional)",
+    "effective_from": "2023-02-07",
+    "effective_to": "2023-12-15"
+  },
+  {
+    "id": "ACT-034",
+    "title": "Cellar hygiene Act (fictional)",
+    "effective_from": "2023-03-16",
+    "effective_to": "2024-02-01"
+  },
+  {
+    "id": "ACT-035",
+    "title": "Courier handling Act (fictional)",
+    "effective_from": "2023-04-22",
+    "effective_to": "2024-03-20"
+  },
+  {
+    "id": "ACT-036",
+    "title": "Clock accuracy Act (fictional)",
+    "effective_from": "2023-05-29",
+    "effective_to": "2024-05-07"
+  },
+  {
+    "id": "ACT-037",
+    "title": "Beehive keeping Act (fictional)",
+    "effective_from": "2023-07-05",
+    "effective_to": "2024-06-24"
+  },
+  {
+    "id": "ACT-038",
+    "title": "Lantern hire Act (fictional)",
+    "effective_from": "2023-08-11",
+    "effective_to": "2024-08-11"
+  },
+  {
+    "id": "ACT-039",
+    "title": "Ticket refunds Act (fictional)",
+    "effective_from": "2023-09-17",
+    "effective_to": "2024-09-28"
+  },
+  {
+    "id": "ACT-040",
+    "title": "Footpath upkeep Act (fictional)",
+    "effective_from": "2023-10-24",
+    "effective_to": "2024-11-15"
+  }
+]
