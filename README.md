@@ -1,5 +1,9 @@
 # llm-gates
 
+[![CI](https://github.com/patrykostwald/llm-gates/actions/workflows/ci.yml/badge.svg)](https://github.com/patrykostwald/llm-gates/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
+
 **Models propose, code decides.**
 
 Deterministic gates for structured LLM output. Zero runtime dependencies, standard library only, Python 3.10+.
@@ -23,10 +27,10 @@ model output (JSON) -> schema -> citations -> PII scan -> second opinion -> publ
 ## Install
 
 ```
-pip install git+https://github.com/patrykostwald/llm-gates
+pip install "llm-gates @ git+https://github.com/patrykostwald/llm-gates@v0.1.1"
 ```
 
-Not on PyPI yet; a package release is on the roadmap.
+Not on PyPI. Drop the `@v0.1.1` to install the latest `main`.
 
 From a checkout: `pip install -e ".[dev]"`.
 
@@ -101,6 +105,26 @@ class NoGuarantees:
 gate.add_rule(NoGuarantees())
 ```
 
+## Benchmark
+
+Claims are cheap, so the repository measures them. `benchmarks/` holds 206 synthetic, labelled cases (a fictional register of norms with validity dates, plus clean, repealed, unknown and mistyped citations, validity-window edges, explicit and masked personal data, second-opinion agreement and schema errors). Each case has an expected decision: `publish`, `review` or `reject`. The default gate is scored next to two naive baselines: schema validation alone, and agreement between two models alone (an LLM-as-judge proxy that can only publish or ask for review).
+
+| System | Accuracy | Publish precision | Unsafe publishes | Clean cases blocked |
+| --- | --- | --- | --- | --- |
+| `PublicationGate.default` | 87.4% | 67.6% | 22 of 156 | 4 of 50 |
+| Schema validation only | 35.9% | 27.5% | 132 of 156 | 0 of 50 |
+| Model agreement only | 32.0% | 30.3% | 115 of 156 | 0 of 50 |
+
+*Unsafe publishes* are outputs that should have been held back but were published. Precision, recall, confusion matrices and per-category scores are in [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md).
+
+What the gate does not catch is listed there case by case:
+
+* 16 of 16 masked personal data samples ("jan [at] example dot com", a PESEL with spaces) are published.
+* 6 of 6 id typos that land on another real norm in force are published.
+* 4 clean answers are sent to review because a nine-digit reference looks like a phone number.
+
+These numbers come from synthetic data written by the author, so read them as a regression guard and a comparison between approaches, not as a forecast for your traffic. CI fails if a score drops. Reproduce with `python benchmarks/run.py --check`.
+
 ## Limitations
 
 Read these before relying on the library.
@@ -113,10 +137,12 @@ Read these before relying on the library.
 
 ## Roadmap
 
-* Citation locators below the norm level (paragraph, point) and norm versions.
-* More PII detectors (national ID numbers, payment cards) behind a plugin interface.
-* Async-friendly rule interface for checks that call out to a database.
-* Optional JSON Schema import for the structural check.
+Tracked as [issues](https://github.com/patrykostwald/llm-gates/issues):
+
+* [#1](https://github.com/patrykostwald/llm-gates/issues/1) PII detectors for other EU countries (good first issue).
+* [#2](https://github.com/patrykostwald/llm-gates/issues/2) Import JSON Schema for the structural check.
+* [#3](https://github.com/patrykostwald/llm-gates/issues/3) Citation locators below the norm level (article, paragraph) and norm versions.
+* [#4](https://github.com/patrykostwald/llm-gates/issues/4) Optional adapters for provider structured-output APIs.
 
 ## Development
 
@@ -124,6 +150,7 @@ Read these before relying on the library.
 python -m venv .venv
 .venv/bin/pip install -e ".[dev]"      # Windows: .venv\Scripts\pip
 ruff check . && mypy && pytest --cov
+python benchmarks/run.py --check
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). The reasoning behind the design is in [ADR 0001](docs/adr/0001-deterministic-gates-over-llm-as-judge.md).

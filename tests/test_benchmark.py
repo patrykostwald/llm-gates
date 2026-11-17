@@ -99,3 +99,17 @@ def test_regression_detection(run: ModuleType, results: Any) -> None:
     problems = run.regressions(results, stricter)
     assert any(p.startswith("accuracy fell") for p in problems)
     assert any(p.startswith("max_unsafe_publishes rose") for p in problems)
+
+
+def test_readme_table_matches_results(run: ModuleType, results: Any) -> None:
+    readme = (run.HERE.parent / "README.md").read_text(encoding="utf-8")
+    totals = results.scores["gate"].classes
+    held_back = totals["review"].support + totals["reject"].support
+    for score in results.scores.values():
+        row = (
+            f"| {run.pct(score.accuracy)} | {run.pct(score.publish_precision)} "
+            f"| {score.unsafe_publishes} of {held_back} "
+            f"| {score.clean_blocked} of {totals['publish'].support} |"
+        )
+        assert row in readme, f"README benchmark table is stale for {score.name}"
+    assert f"{len(results.cases)} synthetic" in readme
